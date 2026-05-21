@@ -3,13 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Crypto Cross-Exchange Arbitrage AI Research Agent API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: exchanges
+    description: Exchange management
+  - name: prices
+    description: Price data across exchanges
+  - name: arbitrage
+    description: Arbitrage opportunity detection and analysis
+  - name: research
+    description: AI-powered research reports
+  - name: watchlist
+    description: Watchlist management
+  - name: openai
+    description: OpenAI AI chat, image, and audio operations
 paths:
   /healthz:
     get:
@@ -24,6 +36,416 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /exchanges:
+    get:
+      operationId: listExchanges
+      tags: [exchanges]
+      summary: List all supported exchanges
+      responses:
+        "200":
+          description: List of exchanges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Exchange"
+
+  /prices:
+    get:
+      operationId: getPrices
+      tags: [prices]
+      summary: Get current prices for a symbol across all exchanges
+      parameters:
+        - name: symbol
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Trading pair symbol e.g. BTC, ETH
+      responses:
+        "200":
+          description: Price data across exchanges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExchangePrice"
+
+  /arbitrage/opportunities:
+    get:
+      operationId: listArbitrageOpportunities
+      tags: [arbitrage]
+      summary: List current arbitrage opportunities
+      parameters:
+        - name: symbol
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: minSpread
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of arbitrage opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArbitrageOpportunity"
+
+  /arbitrage/opportunities/{id}:
+    get:
+      operationId: getArbitrageOpportunity
+      tags: [arbitrage]
+      summary: Get a specific arbitrage opportunity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Arbitrage opportunity detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitrageOpportunity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /arbitrage/summary:
+    get:
+      operationId: getArbitrageSummary
+      tags: [arbitrage]
+      summary: Get summary statistics for arbitrage opportunities
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitrageSummary"
+
+  /arbitrage/history:
+    get:
+      operationId: listArbitrageHistory
+      tags: [arbitrage]
+      summary: Get historical arbitrage opportunities
+      parameters:
+        - name: symbol
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Historical opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArbitrageOpportunity"
+
+  /research/reports:
+    get:
+      operationId: listResearchReports
+      tags: [research]
+      summary: List AI research reports
+      parameters:
+        - name: symbol
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of research reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResearchReport"
+    post:
+      operationId: createResearchReport
+      tags: [research]
+      summary: Trigger AI research analysis on an arbitrage opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResearchReportInput"
+      responses:
+        "201":
+          description: Created research report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResearchReport"
+
+  /research/reports/{id}:
+    get:
+      operationId: getResearchReport
+      tags: [research]
+      summary: Get a specific research report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Research report detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResearchReport"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /watchlist:
+    get:
+      operationId: listWatchlist
+      tags: [watchlist]
+      summary: List watchlist items
+      responses:
+        "200":
+          description: List of watchlist items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WatchlistItem"
+    post:
+      operationId: addToWatchlist
+      tags: [watchlist]
+      summary: Add a symbol to watchlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WatchlistItemInput"
+      responses:
+        "201":
+          description: Created watchlist item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchlistItem"
+
+  /watchlist/{id}:
+    delete:
+      operationId: removeFromWatchlist
+      tags: [watchlist]
+      summary: Remove a symbol from watchlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /openai/conversations:
+    get:
+      operationId: listOpenaiConversations
+      tags: [openai]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiConversation"
+    post:
+      operationId: createOpenaiConversation
+      tags: [openai]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiConversationInput"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversation"
+  /openai/conversations/{id}:
+    get:
+      operationId: getOpenaiConversation
+      tags: [openai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+    delete:
+      operationId: deleteOpenaiConversation
+      tags: [openai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+  /openai/conversations/{id}/messages:
+    get:
+      operationId: listOpenaiMessages
+      tags: [openai]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiMessage"
+    post:
+      operationId: sendOpenaiMessage
+      tags: [openai]
+      summary: Send a text message and receive a streaming text response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiMessageInput"
+      responses:
+        "200":
+          description: SSE stream of assistant text chunks
+          content:
+            text/event-stream: {}
+  /openai/conversations/{id}/voice-messages:
+    post:
+      operationId: sendOpenaiVoiceMessage
+      tags: [openai]
+      summary: Send audio and receive a streaming voice response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiVoiceMessageInput"
+      responses:
+        "200":
+          description: SSE stream of transcript and audio chunks
+          content:
+            text/event-stream: {}
+  /openai/generate-image:
+    post:
+      operationId: generateOpenaiImage
+      tags: [openai]
+      summary: Generate an image from a text prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiImageInput"
+      responses:
+        "200":
+          description: Generated image data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiImageOutput"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +456,379 @@ components:
       required:
         - status
 
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    Exchange:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        makerFee:
+          type: number
+        takerFee:
+          type: number
+        isActive:
+          type: boolean
+        websiteUrl:
+          type: string
+      required:
+        - id
+        - name
+        - slug
+        - makerFee
+        - takerFee
+        - isActive
+        - websiteUrl
+
+    ExchangePrice:
+      type: object
+      properties:
+        exchange:
+          type: string
+        exchangeName:
+          type: string
+        symbol:
+          type: string
+        bid:
+          type: number
+        ask:
+          type: number
+        last:
+          type: number
+        volume24h:
+          type: number
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - exchange
+        - exchangeName
+        - symbol
+        - bid
+        - ask
+        - last
+        - volume24h
+        - updatedAt
+
+    ArbitrageOpportunity:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        buyExchange:
+          type: string
+        buyExchangeName:
+          type: string
+        sellExchange:
+          type: string
+        sellExchangeName:
+          type: string
+        buyPrice:
+          type: number
+        sellPrice:
+          type: number
+        spreadPct:
+          type: number
+        estimatedProfitUsd:
+          type: number
+        buyFee:
+          type: number
+        sellFee:
+          type: number
+        netProfitPct:
+          type: number
+        status:
+          type: string
+          enum: [active, expired, executed]
+        detectedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: ["string", "null"]
+          format: date-time
+      required:
+        - id
+        - symbol
+        - buyExchange
+        - buyExchangeName
+        - sellExchange
+        - sellExchangeName
+        - buyPrice
+        - sellPrice
+        - spreadPct
+        - estimatedProfitUsd
+        - buyFee
+        - sellFee
+        - netProfitPct
+        - status
+        - detectedAt
+        - expiresAt
+
+    ArbitrageSummary:
+      type: object
+      properties:
+        totalActive:
+          type: integer
+        bestSpreadPct:
+          type: number
+        bestNetProfitPct:
+          type: number
+        bestSymbol:
+          type: string
+        bestBuyExchange:
+          type: string
+        bestSellExchange:
+          type: string
+        avgSpreadPct:
+          type: number
+        totalOpportunitiesLast24h:
+          type: integer
+        topSymbols:
+          type: array
+          items:
+            $ref: "#/components/schemas/SymbolStat"
+        topExchangePairs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExchangePairStat"
+      required:
+        - totalActive
+        - bestSpreadPct
+        - bestNetProfitPct
+        - bestSymbol
+        - bestBuyExchange
+        - bestSellExchange
+        - avgSpreadPct
+        - totalOpportunitiesLast24h
+        - topSymbols
+        - topExchangePairs
+
+    SymbolStat:
+      type: object
+      properties:
+        symbol:
+          type: string
+        count:
+          type: integer
+        avgSpreadPct:
+          type: number
+      required:
+        - symbol
+        - count
+        - avgSpreadPct
+
+    ExchangePairStat:
+      type: object
+      properties:
+        buyExchange:
+          type: string
+        sellExchange:
+          type: string
+        count:
+          type: integer
+        avgSpreadPct:
+          type: number
+      required:
+        - buyExchange
+        - sellExchange
+        - count
+        - avgSpreadPct
+
+    ResearchReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        opportunityId:
+          type: ["integer", "null"]
+        symbol:
+          type: string
+        buyExchange:
+          type: ["string", "null"]
+        sellExchange:
+          type: ["string", "null"]
+        spreadPct:
+          type: ["number", "null"]
+        analysis:
+          type: string
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        recommendation:
+          type: string
+          enum: [execute, monitor, avoid]
+        riskFactors:
+          type: array
+          items:
+            type: string
+        keyInsights:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - opportunityId
+        - symbol
+        - buyExchange
+        - sellExchange
+        - spreadPct
+        - analysis
+        - confidence
+        - recommendation
+        - riskFactors
+        - keyInsights
+        - createdAt
+
+    ResearchReportInput:
+      type: object
+      properties:
+        opportunityId:
+          type: integer
+        symbol:
+          type: string
+        customPrompt:
+          type: ["string", "null"]
+      required:
+        - opportunityId
+        - symbol
+
+    WatchlistItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - symbol
+        - isActive
+        - createdAt
+
+    WatchlistItemInput:
+      type: object
+      properties:
+        symbol:
+          type: string
+      required:
+        - symbol
+
+    OpenaiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+    OpenaiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+    OpenaiConversationInput:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+    OpenaiMessageInput:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+    OpenaiVoiceMessageInput:
+      type: object
+      properties:
+        audio:
+          type: string
+          description: Base64-encoded audio data
+      required:
+        - audio
+    OpenaiConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenaiMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+    OpenaiImageInput:
+      type: object
+      properties:
+        prompt:
+          type: string
+        size:
+          type: string
+          enum: ["1024x1024", "512x512", "256x256"]
+      required:
+        - prompt
+    OpenaiImageOutput:
+      type: object
+      properties:
+        b64_json:
+          type: string
+      required:
+        - b64_json
+    OpenaiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
