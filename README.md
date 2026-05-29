@@ -42,6 +42,8 @@ Required environment variables:
 ## Development
 
 ```bash
+pnpm install
+pnpm --filter @workspace/db run push
 pnpm --filter @workspace/api-server run dev
 pnpm --filter @workspace/arb-agent run dev
 ```
