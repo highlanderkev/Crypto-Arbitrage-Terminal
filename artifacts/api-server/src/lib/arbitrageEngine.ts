@@ -1,22 +1,7 @@
 import { db, arbitrageOpportunitiesTable, exchangesTable } from "@workspace/db";
 import { logger } from "./logger";
-import { eq, desc } from "drizzle-orm";
-
-// Simulated base prices for major crypto pairs (in USD)
-const BASE_PRICES: Record<string, number> = {
-  BTC: 67450,
-  ETH: 3520,
-  SOL: 172,
-  BNB: 608,
-  XRP: 0.612,
-  ADA: 0.465,
-  AVAX: 38.2,
-  DOT: 7.85,
-  MATIC: 0.892,
-  LINK: 14.3,
-  LTC: 84.5,
-  DOGE: 0.162,
-};
+import { getBasePrices } from "./priceService";
+import { eq } from "drizzle-orm";
 
 // Exchange-specific price biases
 const EXCHANGE_BIASES: Record<string, number> = {
@@ -47,14 +32,17 @@ function getBidPrice(basePrice: number, slug: string): number {
 
 export async function scanArbitrageOpportunities(): Promise<void> {
   try {
-    const exchanges = await db.select().from(exchangesTable);
+    const [exchanges, basePrices] = await Promise.all([
+      db.select().from(exchangesTable),
+      getBasePrices(),
+    ]);
     if (exchanges.length < 2) return;
 
     const TRADE_SIZE_USD = 10000;
     const newOpps = [];
 
-    for (const symbol of Object.keys(BASE_PRICES)) {
-      const basePrice = BASE_PRICES[symbol];
+    for (const symbol of Object.keys(basePrices)) {
+      const basePrice = basePrices[symbol];
       if (!basePrice) continue;
 
       // Compute ask/bid for each exchange
