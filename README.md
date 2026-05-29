@@ -1,4 +1,4 @@
-# Crypto-Arbitrage-Bot (ArbitrageX Terminal)
+# Crypto-Arbitrage-Terminal
 
 A crypto cross-exchange arbitrage AI research platform that monitors spread opportunities across major exchanges and generates AI-assisted analysis reports.
 
