@@ -1,27 +1,9 @@
 import { Router, type IRouter } from "express";
 import { db, exchangesTable } from "@workspace/db";
 import { GetPricesQueryParams, GetPricesResponse } from "@workspace/api-zod";
+import { getBasePrices } from "../lib/priceService";
 
 const router: IRouter = Router();
-
-// Simulated base prices for major crypto pairs (in USD)
-const BASE_PRICES: Record<string, number> = {
-  BTC: 67450,
-  ETH: 3520,
-  SOL: 172,
-  BNB: 608,
-  XRP: 0.612,
-  ADA: 0.465,
-  AVAX: 38.2,
-  DOT: 7.85,
-  MATIC: 0.892,
-  LINK: 14.3,
-  LTC: 84.5,
-  DOGE: 0.162,
-  UNI: 9.45,
-  ATOM: 8.72,
-  FIL: 5.61,
-};
 
 // Exchange-specific price biases (simulate different order books)
 const EXCHANGE_BIAS: Record<string, number> = {
@@ -55,15 +37,18 @@ router.get("/prices", async (req, res): Promise<void> => {
   const parsed = GetPricesQueryParams.safeParse(req.query);
   const symbolFilter = parsed.success ? parsed.data.symbol?.toUpperCase() : undefined;
 
-  const exchanges = await db.select().from(exchangesTable).where(undefined);
+  const [exchanges, basePrices] = await Promise.all([
+    db.select().from(exchangesTable).where(undefined),
+    getBasePrices(),
+  ]);
 
-  const symbols = symbolFilter ? [symbolFilter] : Object.keys(BASE_PRICES);
+  const symbols = symbolFilter ? [symbolFilter] : Object.keys(basePrices);
   const now = new Date();
 
   const prices = [];
   for (const exchange of exchanges) {
     for (const symbol of symbols) {
-      const basePrice = BASE_PRICES[symbol];
+      const basePrice = basePrices[symbol];
       if (!basePrice) continue;
       const { bid, ask, last, volume24h } = getSimulatedPrice(basePrice, exchange.slug);
       prices.push({
