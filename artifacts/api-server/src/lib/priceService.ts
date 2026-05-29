@@ -85,10 +85,10 @@ export async function getBasePrices(): Promise<Record<string, number>> {
     const prices = await fetchLivePrices();
     cachedPrices = prices;
     cacheExpiresAt = now + CACHE_TTL_MS;
-    logger.debug({ symbols: Object.keys(prices).length }, "Live prices refreshed from Binance");
-    return prices;
+    logger.debug({ count: Object.keys(prices).length }, "Live prices refreshed from Binance");
+    return { ...prices };
   } catch (err) {
     logger.warn({ err }, "Failed to fetch live prices from Binance, using mock fallback");
-    return cachedPrices ?? { ...MOCK_BASE_PRICES };
+    return cachedPrices ? { ...cachedPrices } : { ...MOCK_BASE_PRICES };
   }
 }
