@@ -253,6 +253,7 @@ async function fetchHuobiPrices(symbols: string[]): Promise<Record<string, Excha
       ask: number;
       close: number;
       amount: number;
+      vol: number;
     }>;
   };
 
@@ -270,7 +271,7 @@ async function fetchHuobiPrices(symbols: string[]): Promise<Record<string, Excha
     const bid = item.bid;
     const ask = item.ask;
     const last = item.close;
-    const volume24h = item.amount;
+    const volume24h = item.vol;
 
     if (!isNaN(bid) && !isNaN(ask) && !isNaN(last)) {
       result[asset] = { bid, ask, last, volume24h: isNaN(volume24h) ? 0 : volume24h, updatedAt: now };
