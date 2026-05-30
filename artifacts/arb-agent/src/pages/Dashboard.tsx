@@ -63,7 +63,7 @@ export default function Dashboard() {
             <div className="text-2xl font-bold font-mono text-emerald-500" data-testid="stat-best-spread">
               {formatPercent(summary.bestSpreadPct)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">{summary.bestSymbol} on {summary.bestBuyExchangeName} / {summary.bestSellExchangeName}</p>
+            <p className="text-xs text-muted-foreground mt-1">{summary.bestSymbol} on {summary.bestBuyExchange} / {summary.bestSellExchange}</p>
           </CardContent>
         </Card>
         <Card className="border-sidebar-border bg-card/50 backdrop-blur-sm">

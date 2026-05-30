@@ -1,4 +1,4 @@
-import { useGetPrices } from "@workspace/api-client-react";
+import { useGetPrices, getGetPricesQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,12 @@ import { Search } from "lucide-react";
 export default function PriceMonitor() {
   const [symbolFilter, setSymbolFilter] = useState("BTC");
   
+  const params = { symbol: symbolFilter || undefined };
   const { data: prices, isLoading } = useGetPrices(
-    { symbol: symbolFilter || undefined },
+    params,
     { 
       query: { 
+        queryKey: getGetPricesQueryKey(params),
         refetchInterval: 5000 // Refetch every 5 seconds for live feel
       } 
     }
