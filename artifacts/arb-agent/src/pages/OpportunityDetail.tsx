@@ -96,7 +96,7 @@ export default function OpportunityDetail() {
                 <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" /> Net Profit (Est.)
                 </div>
-                <div className="text-2xl font-mono font-bold" className={opp.netProfitPct > 0 ? "text-2xl font-mono font-bold text-emerald-500" : "text-2xl font-mono font-bold text-destructive"}>
+                <div className={opp.netProfitPct > 0 ? "text-2xl font-mono font-bold text-emerald-500" : "text-2xl font-mono font-bold text-destructive"}>
                   {formatPercent(opp.netProfitPct)}
                 </div>
                 <div className="text-sm text-muted-foreground font-mono">{formatCurrency(opp.estimatedProfitUsd, 2)} per unit</div>
