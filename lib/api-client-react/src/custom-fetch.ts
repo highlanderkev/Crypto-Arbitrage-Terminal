@@ -80,7 +80,7 @@ function resolveUrl(input: RequestInfo | URL): string {
 
 function getPathname(url: string): string | null {
   try {
-    return new URL(url, "https://placeholder.invalid").pathname;
+    return new URL(url, "https://example.invalid").pathname;
   } catch {
     return null;
   }
@@ -94,7 +94,7 @@ function shouldExpectJsonResponse(
   if (responseType !== "auto") return false;
 
   const pathname = getPathname(url);
-  return pathname === "/api" || Boolean(pathname?.startsWith("/api/"));
+  return pathname === "/api" || pathname?.startsWith("/api/") || false;
 }
 
 function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
