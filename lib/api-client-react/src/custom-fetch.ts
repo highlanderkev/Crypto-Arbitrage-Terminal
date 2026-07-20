@@ -10,7 +10,7 @@ export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
-const URL_PARSER_FALLBACK_BASE = "https://example.invalid";
+const URL_PARSING_FALLBACK_BASE_URL = "https://example.invalid";
 const API_PATH_PREFIX = "/api";
 
 // ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ function resolveUrl(input: RequestInfo | URL): string {
 
 function getPathname(url: string): string | null {
   try {
-    return new URL(url, URL_PARSER_FALLBACK_BASE).pathname;
+    return new URL(url, URL_PARSING_FALLBACK_BASE_URL).pathname;
   } catch {
     return null;
   }
@@ -96,6 +96,8 @@ function shouldExpectJsonResponse(
   if (responseType !== "auto") return false;
 
   const pathname = getPathname(url);
+  // If parsing fails, fall back to the generic auto-detection path instead of
+  // forcing JSON handling for a URL shape we could not classify.
   if (!pathname) return false;
 
   return pathname === API_PATH_PREFIX || pathname.startsWith(`${API_PATH_PREFIX}/`);
