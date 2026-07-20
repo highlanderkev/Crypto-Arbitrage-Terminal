@@ -10,6 +10,8 @@ export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
+const URL_PARSING_FALLBACK_BASE_URL = "https://example.invalid";
+const API_PATH_PREFIX = "/api";
 
 // ---------------------------------------------------------------------------
 // Module-level configuration
@@ -76,6 +78,29 @@ function resolveUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") return input;
   if (isUrl(input)) return input.toString();
   return input.url;
+}
+
+function getPathname(url: string): string | null {
+  try {
+    return new URL(url, URL_PARSING_FALLBACK_BASE_URL).pathname;
+  } catch {
+    return null;
+  }
+}
+
+function shouldExpectJsonResponse(
+  url: string,
+  responseType: "json" | "text" | "blob" | "auto",
+): boolean {
+  if (responseType === "json") return true;
+  if (responseType !== "auto") return false;
+
+  const pathname = getPathname(url);
+  // If parsing fails, fall back to the generic auto-detection path instead of
+  // forcing JSON handling for a URL shape we could not classify.
+  if (!pathname) return false;
+
+  return pathname === API_PATH_PREFIX || pathname.startsWith(`${API_PATH_PREFIX}/`);
 }
 
 function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
@@ -328,6 +353,8 @@ export async function customFetch<T = unknown>(
 ): Promise<T> {
   input = applyBaseUrl(input);
   const { responseType = "auto", headers: headersInit, ...init } = options;
+  const url = resolveUrl(input);
+  const expectsJsonResponse = shouldExpectJsonResponse(url, responseType);
 
   const method = resolveMethod(input, init.method);
 
@@ -345,7 +372,7 @@ export async function customFetch<T = unknown>(
     headers.set("content-type", "application/json");
   }
 
-  if (responseType === "json" && !headers.has("accept")) {
+  if (expectsJsonResponse && !headers.has("accept")) {
     headers.set("accept", DEFAULT_JSON_ACCEPT);
   }
 
@@ -358,7 +385,7 @@ export async function customFetch<T = unknown>(
     }
   }
 
-  const requestInfo = { method, url: resolveUrl(input) };
+  const requestInfo = { method, url };
 
   const response = await fetch(input, { ...init, method, headers });
 
@@ -367,5 +394,9 @@ export async function customFetch<T = unknown>(
     throw new ApiError(response, errorData, requestInfo);
   }
 
-  return (await parseSuccessBody(response, responseType, requestInfo)) as T;
+  return (await parseSuccessBody(
+    response,
+    expectsJsonResponse && responseType === "auto" ? "json" : responseType,
+    requestInfo,
+  )) as T;
 }
