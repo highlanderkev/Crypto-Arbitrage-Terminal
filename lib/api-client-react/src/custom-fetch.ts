@@ -10,7 +10,8 @@ export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
-const RELATIVE_URL_BASE = "https://example.invalid";
+const URL_PARSER_FALLBACK_BASE = "https://example.invalid";
+const API_PATH_PREFIX = "/api";
 
 // ---------------------------------------------------------------------------
 // Module-level configuration
@@ -81,7 +82,7 @@ function resolveUrl(input: RequestInfo | URL): string {
 
 function getPathname(url: string): string | null {
   try {
-    return new URL(url, RELATIVE_URL_BASE).pathname;
+    return new URL(url, URL_PARSER_FALLBACK_BASE).pathname;
   } catch {
     return null;
   }
@@ -97,7 +98,7 @@ function shouldExpectJsonResponse(
   const pathname = getPathname(url);
   if (!pathname) return false;
 
-  return pathname === "/api" || pathname.startsWith("/api/");
+  return pathname === API_PATH_PREFIX || pathname.startsWith(`${API_PATH_PREFIX}/`);
 }
 
 function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
